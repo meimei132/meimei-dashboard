@@ -31,6 +31,9 @@ jobs:
           FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
         run: node scripts/fetch-from-doc.js
       
+      - name: 数据自检
+        run: node scripts/validate-data.js
+      
       - name: 构建静态页面
         run: pnpm build
       
@@ -46,3 +49,9 @@ jobs:
           projectName: meimei-dashboard
           directory: out
           branch: main
+      
+      - name: 发送飞书日报
+        if: success()
+        run: node scripts/send-feishu-report.js
+        env:
+          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
