@@ -127,11 +127,11 @@ function RoomSection({ room, records, currentMonth, dataUpdateDate }: {
   const [rankTimeView, setRankTimeView] = useState<string>("day");
   const [trendDateRange, setTrendDateRange] = useState<{ start: string; end: string }>({ start: '', end: '' });
 
-  // 只使用截止到昨天的数据
-  const filteredRecords = useMemo(() => filterUpToYesterday(records), [records]);
+  // 使用所有数据（不过滤）
+  const filteredRecords = records;
   
-  // 使用该直播间过滤后数据的最新日期作为"昨日"
-  const yesterdayDate = useMemo(() => getLatestDate(filteredRecords), [filteredRecords]);
+  // 使用最新日期作为"昨日"
+  const yesterdayDate = useMemo(() => getLatestDate(records), [records]);
 
   // 初始化趋势图日期范围
   const trendDateRangeInit = useMemo(() => {
@@ -423,11 +423,11 @@ export default function OverviewPage() {
     }
   }, [roomList, selectedRoom]);
   
-  // 只使用截止到昨天的数据
-  const filteredRecords = useMemo(() => filterUpToYesterday(records), [records]);
+  // 使用所有数据（不过滤）
+  const filteredRecords = records;
   
-  // 使用过滤后数据的最新日期作为"昨日"（用于昨日数据展示）
-  const yesterdayDate = useMemo(() => getLatestDate(filteredRecords), [filteredRecords]);
+  // 使用最新日期作为"昨日"
+  const yesterdayDate = useMemo(() => getLatestDate(records), [records]);
   
   // 使用原始数据的最新日期作为数据更新时间
   const latestDate = useMemo(() => getLatestDate(records), [records]);
