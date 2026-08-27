@@ -1,0 +1,46 @@
+# Gitee Go 自动更新流水线
+# 每天早上 8 点自动运行
+
+version: '1.0'
+name: auto-update
+displayName: 自动更新数据
+triggers:
+  cron:
+    - cron: '0 0 * * *'  # 每天 UTC 0:00 = 北京时间 8:00
+      branches:
+        include:
+          - main
+
+stages:
+  - name: update
+    displayName: 更新数据并部署
+    steps:
+      - step: exec
+        name: 安装依赖
+        script: |
+          npm install -g pnpm
+          pnpm install
+      
+      - step: exec
+        name: 抓取飞书数据
+        script: |
+          node scripts/fetch-from-doc.js
+      
+      - step: exec
+        name: 构建项目
+        script: |
+          rm -rf .next out
+          pnpm build
+      
+      - step: exec
+        name: 部署到 Cloudflare Pages
+        script: |
+          export CLOUDFLARE_API_TOKEN=${CF_API_TOKEN}
+          export CLOUDFLARE_ACCOUNT_ID=${CF_ACCOUNT_ID}
+          npx wrangler pages deploy out --project-name=meimei-dashboard
+      
+      - step: exec
+        name: 完成
+        script: |
+          echo "✅ 自动更新完成！"
+          echo "访问地址：https://meimei-dashboard.pages.dev"

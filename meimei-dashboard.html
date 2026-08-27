@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>美魅数据大屏</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+    font-family: 'Microsoft YaHei', Arial, sans-serif; 
+    background: #0a0a0f;
+    color: #e2e8f0;
+    min-height: 100vh;
+}
+.nav {
+    background: rgba(20, 20, 35, 0.9);
+    border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+    padding: 15px 30px;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.nav a {
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    transition: all 0.3s;
+}
+.nav a:hover, .nav a.active {
+    color: #00d4ff;
+    background: rgba(0, 212, 255, 0.1);
+}
+.page { display: none; padding: 20px; max-width: 1400px; margin: 0 auto; }
+.page.active { display: block; }
+.header-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px 20px;
+    background: rgba(20, 20, 35, 0.6);
+    border-radius: 10px;
+    border: 1px solid rgba(0, 212, 255, 0.1);
+}
+.update-time {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #94a3b8;
+}
+.update-time::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+.stat-card {
+    background: rgba(20, 20, 35, 0.8);
+    border: 1px solid rgba(0, 212, 255, 0.15);
+    border-radius: 10px;
+    padding: 20px;
+    transition: all 0.3s;
+}
+.stat-card:hover {
+    border-color: rgba(0, 212, 255, 0.4);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.1);
+}
+.stat-label { font-size: 12px; color: #94a3b8; margin-bottom: 8px; }
+.stat-value { font-size: 24px; font-weight: bold; font-family: 'Courier New', monospace; }
+.stat-value.cyan { color: #00d4ff; }
+.stat-value.green { color: #10b981; }
+.stat-value.blue { color: #3b82f6; }
+.stat-value.purple { color: #a855f7; }
+.stat-value.amber { color: #f59e0b; }
+.stat-value.pink { color: #ec4899; }
+.chart-container {
+    background: rgba(20, 20, 35, 0.8);
+    border: 1px solid rgba(0, 212, 255, 0.15);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+.chart-title {
+    font-size: 14px;
+    color: #e2e8f0;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+}
+.chart { height: 300px; }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+th, td {
+    padding: 12px 8px;
+    text-align: center;
+    border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+}
+th {
+    background: rgba(0, 212, 255, 0.1);
+    color: #00d4ff;
+    font-weight: 600;
+}
+tr:hover { background: rgba(0, 212, 255, 0.05); }
+.rank-1, .rank-2, .rank-3 { 
+    background: rgba(245, 158, 11, 0.2); 
+    color: #f59e0b;
+    font-weight: bold;
+}
+.alert-box {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 10px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+}
+.alert-title {
+    color: #f59e0b;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.alert-title::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: #f59e0b;
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+}
+.alert-item {
+    font-size: 12px;
+    color: #fbbf24;
+    padding: 4px 0;
+}
+.filter-bar {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.filter-bar label {
+    font-size: 13px;
+    color: #94a3b8;
+}
+.filter-bar select, .filter-bar input {
+    background: rgba(20, 20, 35, 0.8);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    color: #e2e8f0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+.filter-bar select:focus, .filter-bar input:focus {
+    outline: none;
+    border-color: #00d4ff;
+}
+.btn {
+    background: rgba(0, 212, 255, 0.15);
+    color: #00d4ff;
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.3s;
+}
+.btn:hover {
+    background: rgba(0, 212, 255, 0.25);
+}
+.btn.active {
+    background: rgba(0, 212, 255, 0.3);
+    border-color: #00d4ff;
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <a href="#" class="nav-link active" data-page="overview">数据总览</a>
+    <a href="#" class="nav-link" data-page="room">直播间分析</a>
+    <a href="#" class="nav-link" data-page="streamer">主播分析</a>
+    <a href="#" class="nav-link" data-page="schedule">智能排班</a>
+    <a href="#" class="nav-link" data-page="yearly">年度数据</a>
+</nav>
+
+<!-- 数据总览页 -->
+<div id="overview" class="page active">
+    <div class="header-info">
+        <div class="update-time">数据更新时间：<span id="update-time">加载中...</span></div>
+        <div style="font-size:12px;color:#f59e0b;background:rgba(245,158,11,0.1);padding:4px 12px;border-radius:4px;">数据仅为 8 月</div>
+    </div>
+    
+    <div class="stats-grid" id="overview-stats"></div>
+    
+    <div class="alert-box" id="alert-box" style="display:none;">
+        <div class="alert-title">主播预警</div>
+        <div id="alert-list"></div>
+    </div>
+    
+    <div class="chart-container">
+        <div class="chart-title">ROI 趋势</div>
+        <div id="roi-chart" class="chart"></div>
+    </div>
+    
+    <div class="chart-container">
+        <div class="chart-title">时耗趋势</div>
+        <div id="timecost-chart" class="chart"></div>
+    </div>
+    
+    <div class="chart-container">
+        <div class="chart-title">主播数据排名</div>
+        <table id="streamer-table">
+            <thead>
+                <tr><th>排名</th><th>主播</th><th>直播间</th><th>消耗</th><th>保费</th><th>保单数</th><th>时长(h)</th><th>ROI</th><th>时耗</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 直播间分析页 -->
+<div id="room" class="page">
+    <div class="header-info">
+        <div class="update-time">数据更新时间：<span class="update-time-text">加载中...</span></div>
+    </div>
+    <div class="filter-bar">
+        <label>选择直播间：</label>
+        <select id="room-select"></select>
+    </div>
+    <div class="stats-grid" id="room-stats"></div>
+    <div class="chart-container">
+        <div class="chart-title">ROI 趋势</div>
+        <div id="room-roi-chart" class="chart"></div>
+    </div>
+    <div class="chart-container">
+        <div class="chart-title">主播排名</div>
+        <table id="room-streamer-table">
+            <thead>
+                <tr><th>排名</th><th>主播</th><th>消耗</th><th>保费</th><th>保单数</th><th>时长(h)</th><th>ROI</th><th>时耗</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 主播分析页 -->
+<div id="streamer" class="page">
+    <div class="header-info">
+        <div class="update-time">数据更新时间：<span class="update-time-text">加载中...</span></div>
+    </div>
+    <div class="filter-bar">
+        <label>选择直播间：</label>
+        <select id="streamer-room-select"></select>
+        <label>选择主播：</label>
+        <select id="streamer-select"></select>
+    </div>
+    <div class="chart-container">
+        <div class="chart-title">历史趋势</div>
+        <div id="streamer-trend-chart" class="chart"></div>
+    </div>
+    <div class="chart-container">
+        <div class="chart-title">直播间表现</div>
+        <div id="streamer-room-chart" class="chart"></div>
+    </div>
+</div>
+
+<!-- 智能排班页 -->
+<div id="schedule" class="page">
+    <div class="header-info">
+        <div class="update-time">数据更新时间：<span class="update-time-text">加载中...</span></div>
+    </div>
+    <div class="filter-bar">
+        <label>选择主播：</label>
+        <select id="schedule-streamer-select"></select>
+    </div>
+    <div class="chart-container">
+        <div class="chart-title">时段偏好</div>
+        <div id="schedule-chart" class="chart"></div>
+    </div>
+    <div class="chart-container">
+        <div class="chart-title">推荐班次</div>
+        <div id="schedule-recommend"></div>
+    </div>
+</div>
+
+<!-- 年度数据页 -->
+<div id="yearly" class="page">
+    <div class="header-info">
+        <div class="update-time">数据更新时间：<span class="update-time-text">加载中...</span></div>
+    </div>
+    <div class="stats-grid" id="yearly-stats"></div>
+    <div class="chart-container">
+        <div class="chart-title">月度趋势</div>
+        <div id="yearly-chart" class="chart"></div>
+    </div>
+    <div class="chart-container">
+        <div class="chart-title">直播间对比</div>
+        <div id="yearly-room-chart" class="chart"></div>
+    </div>
+</div>
+
+<script>
+// ===== 数据定义 =====
+const mockData = [
+// 这里会插入所有数据
+];
+
+// ===== 工具函数 =====
+function normalizeDate(d) {
+    const parts = d.split('.');
+    if (parts.length !== 3) return d;
+    return `${parts[0]}-${String(parts[1]).padStart(2,'0')}-${String(parts[2]).padStart(2,'0')}`;
+}
+
+function getLatestDate(data) {
+    return data.reduce((latest, r) => {
+        return normalizeDate(r.date) > normalizeDate(latest) ? r.date : latest;
+    }, '');
+}
+
+function aggregateRecords(records) {
+    const totalConsume = records.reduce((sum, r) => sum + r.consume, 0);
+    const totalPremium = records.reduce((sum, r) => sum + r.premium, 0);
+    const totalPolicies = records.reduce((sum, r) => sum + r.policies, 0);
+    const totalDuration = records.reduce((sum, r) => sum + r.duration, 0);
+    const avgRoi = totalConsume > 0 ? totalPremium / totalConsume : 0;
+    const avgTimeCost = totalDuration > 0 ? totalConsume / (totalDuration / 60) : 0;
+    return { totalConsume, totalPremium, totalPolicies, totalDuration, avgRoi, avgTimeCost };
+}
+
+function formatNumber(num) {
+    return Math.round(num).toLocaleString('zh-CN');
+}
+
+// ===== 页面导航 =====
+document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        link.classList.add('active');
+        document.getElementById(link.dataset.page).classList.add('active');
+    });
+});
+
+// ===== 初始化 =====
+function init() {
+    const latestDate = getLatestDate(mockData);
+    document.querySelectorAll('.update-time-text, #update-time').forEach(el => {
+        el.textContent = latestDate;
+    });
+    
+    renderOverview();
+    renderRoom();
+    renderStreamer();
+    renderSchedule();
+    renderYearly();
+}
+
+// ===== 渲染数据总览 =====
+function renderOverview() {
+    const stats = aggregateRecords(mockData);
+    document.getElementById('overview-stats').innerHTML = `
+        <div class="stat-card"><div class="stat-label">总消耗</div><div class="stat-value cyan">${formatNumber(stats.totalConsume)}</div></div>
+        <div class="stat-card"><div class="stat-label">总保费</div><div class="stat-value green">${formatNumber(stats.totalPremium)}</div></div>
+        <div class="stat-card"><div class="stat-label">总保单数</div><div class="stat-value blue">${stats.totalPolicies.toLocaleString()}</div></div>
+        <div class="stat-card"><div class="stat-label">总时长</div><div class="stat-value purple">${(stats.totalDuration/60).toFixed(0)}h</div></div>
+        <div class="stat-card"><div class="stat-label">平均 ROI</div><div class="stat-value amber">${stats.avgRoi.toFixed(2)}</div></div>
+        <div class="stat-card"><div class="stat-label">平均时耗</div><div class="stat-value pink">${stats.avgTimeCost.toFixed(2)}</div></div>
+    `;
+    
+    // ROI 趋势图
+    const dailyData = {};
+    mockData.forEach(r => {
+        if (!dailyData[r.date]) dailyData[r.date] = { consume: 0, premium: 0 };
+        dailyData[r.date].consume += r.consume;
+        dailyData[r.date].premium += r.premium;
+    });
+    const dates = Object.keys(dailyData).sort((a,b) => normalizeDate(a).localeCompare(normalizeDate(b)));
+    const roiData = dates.map(d => dailyData[d].consume > 0 ? (dailyData[d].premium / dailyData[d].consume).toFixed(2) : 0);
+    
+    const roiChart = echarts.init(document.getElementById('roi-chart'));
+    roiChart.setOption({
+        tooltip: { trigger: 'axis' },
+        grid: { left: 50, right: 20, top: 20, bottom: 30 },
+        xAxis: { type: 'category', data: dates, axisLabel: { color: '#64748b', fontSize: 10, rotate: 45 } },
+        yAxis: { type: 'value', axisLabel: { color: '#64748b' }, splitLine: { lineStyle: { color: '#1e293b' } } },
+        series: [{ type: 'line', data: roiData, smooth: true, symbol: 'circle', symbolSize: 4, lineStyle: { color: '#f59e0b', width: 2 }, itemStyle: { color: '#f59e0b' } }]
+    });
+    
+    // 主播排名表
+    const streamerMap = {};
+    mockData.forEach(r => {
+        if (!streamerMap[r.streamer]) streamerMap[r.streamer] = [];
+        streamerMap[r.streamer].push(r);
+    });
+    const streamerStats = Object.entries(streamerMap).map(([streamer, recs]) => ({
+        streamer, room: recs[0].room, ...aggregateRecords(recs)
+    })).sort((a,b) => b.totalConsume - a.totalConsume);
+    
+    const tbody = document.querySelector('#streamer-table tbody');
+    tbody.innerHTML = streamerStats.map((s, i) => `
+        <tr class="${i<3?'rank-'+(i+1):''}">
+            <td>${i+1}</td><td>${s.streamer}</td><td>${s.room}</td>
+            <td style="color:#00d4ff">${formatNumber(s.totalConsume)}</td>
+            <td style="color:#10b981">${formatNumber(s.totalPremium)}</td>
+            <td style="color:#3b82f6">${s.totalPolicies}</td>
+            <td style="color:#a855f7">${(s.totalDuration/60).toFixed(1)}</td>
+            <td style="color:#f59e0b">${s.avgRoi.toFixed(2)}</td>
+            <td style="color:#ec4899">${s.avgTimeCost.toFixed(2)}</td>
+        </tr>
+    `).join('');
+}
+
+// ===== 渲染直播间分析 =====
+function renderRoom() {
+    const rooms = [...new Set(mockData.map(r => r.room))];
+    const select = document.getElementById('room-select');
+    select.innerHTML = rooms.map(r => `<option value="${r}">${r}</option>`).join('');
+    select.addEventListener('change', () => updateRoomChart(select.value));
+    updateRoomChart(rooms[0]);
+}
+
+function updateRoomChart(room) {
+    const roomData = mockData.filter(r => r.room === room);
+    const stats = aggregateRecords(roomData);
+    document.getElementById('room-stats').innerHTML = `
+        <div class="stat-card"><div class="stat-label">总消耗</div><div class="stat-value cyan">${formatNumber(stats.totalConsume)}</div></div>
+        <div class="stat-card"><div class="stat-label">总保费</div><div class="stat-value green">${formatNumber(stats.totalPremium)}</div></div>
+        <div class="stat-card"><div class="stat-label">总保单数</div><div class="stat-value blue">${stats.totalPolicies.toLocaleString()}</div></div>
+        <div class="stat-card"><div class="stat-label">平均 ROI</div><div class="stat-value amber">${stats.avgRoi.toFixed(2)}</div></div>
+    `;
+    
+    const streamerMap = {};
+    roomData.forEach(r => {
+        if (!streamerMap[r.streamer]) streamerMap[r.streamer] = [];
+        streamerMap[r.streamer].push(r);
+    });
+    const streamerStats = Object.entries(streamerMap).map(([streamer, recs]) => ({
+        streamer, ...aggregateRecords(recs)
+    })).sort((a,b) => b.totalConsume - a.totalConsume);
+    
+    document.querySelector('#room-streamer-table tbody').innerHTML = streamerStats.map((s, i) => `
+        <tr class="${i<3?'rank-'+(i+1):''}">
+            <td>${i+1}</td><td>${s.streamer}</td>
+            <td style="color:#00d4ff">${formatNumber(s.totalConsume)}</td>
+            <td style="color:#10b981">${formatNumber(s.totalPremium)}</td>
+            <td style="color:#3b82f6">${s.totalPolicies}</td>
+            <td style="color:#a855f7">${(s.totalDuration/60).toFixed(1)}</td>
+            <td style="color:#f59e0b">${s.avgRoi.toFixed(2)}</td>
+            <td style="color:#ec4899">${s.avgTimeCost.toFixed(2)}</td>
+        </tr>
+    `).join('');
+}
+
+// ===== 渲染主播分析 =====
+function renderStreamer() {
+    const rooms = [...new Set(mockData.map(r => r.room))];
+    const roomSelect = document.getElementById('streamer-room-select');
+    roomSelect.innerHTML = rooms.map(r => `<option value="${r}">${r}</option>`).join('');
+    
+    const updateStreamers = () => {
+        const room = roomSelect.value;
+        const streamers = [...new Set(mockData.filter(r => r.room === room).map(r => r.streamer))];
+        const streamerSelect = document.getElementById('streamer-select');
+        streamerSelect.innerHTML = streamers.map(s => `<option value="${s}">${s}</option>`).join('');
+    };
+    roomSelect.addEventListener('change', updateStreamers);
+    updateStreamers();
+}
+
+// ===== 渲染智能排班 =====
+function renderSchedule() {
+    const streamers = [...new Set(mockData.map(r => r.streamer))];
+    const select = document.getElementById('schedule-streamer-select');
+    select.innerHTML = streamers.map(s => `<option value="${s}">${s}</option>`).join('');
+}
+
+// ===== 渲染年度数据 =====
+function renderYearly() {
+    const stats = aggregateRecords(mockData);
+    document.getElementById('yearly-stats').innerHTML = `
+        <div class="stat-card"><div class="stat-label">总消耗</div><div class="stat-value cyan">${formatNumber(stats.totalConsume)}</div></div>
+        <div class="stat-card"><div class="stat-label">总保费</div><div class="stat-value green">${formatNumber(stats.totalPremium)}</div></div>
+        <div class="stat-card"><div class="stat-label">总保单数</div><div class="stat-value blue">${stats.totalPolicies.toLocaleString()}</div></div>
+    `;
+}
+
+// 启动
+init();
+</script>
+</body>
+</html>
