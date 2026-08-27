@@ -1,5 +1,5 @@
 // 自动从飞书文档抓取
-// 抓取时间: 2026/8/27 17:59:21
+// 抓取时间: 2026/8/27 19:30:59
 // 文档 Token: BmeXwIVhziP867kk5DvcUEPCnuc
 // 固定列索引：日期=0, 时间段=1, 主播=2, 视频消耗=4, 直投消耗=5, 保单量=6, 保费=7
 // 总消耗 = 视频消耗 + 直投消耗（计算得出）
@@ -8358,26 +8358,26 @@ export const SESSION_RECORDS: SessionRecord[] = [
     "roomName": "平安健康-E生保",
     "streamer": "宁书毅",
     "timeSlot": "17:00-18:00",
-    "consume": 0,
-    "premium": 0,
-    "policies": 0,
-    "roi": 0,
-    "avgPolicy": 0,
+    "consume": 4976.36,
+    "premium": 10727.54,
+    "policies": 3,
+    "roi": 2.156,
+    "avgPolicy": 3575.85,
     "duration": 60,
-    "timeCost": 0
+    "timeCost": 4976.36
   },
   {
     "date": "2026.8.27",
     "roomName": "平安健康-E生保",
     "streamer": "宁书毅",
     "timeSlot": "18:00-19:00",
-    "consume": 0,
-    "premium": 0,
-    "policies": 0,
-    "roi": 0,
-    "avgPolicy": 0,
+    "consume": 3892.23,
+    "premium": 18132.36,
+    "policies": 7,
+    "roi": 4.659,
+    "avgPolicy": 2590.34,
     "duration": 60,
-    "timeCost": 0
+    "timeCost": 3892.23
   },
   {
     "date": "2026.8.27",
@@ -11959,26 +11959,26 @@ export const SESSION_RECORDS: SessionRecord[] = [
     "roomName": "平安健康-全家保",
     "streamer": "孙克岚",
     "timeSlot": "17:00-18:00",
-    "consume": 0,
-    "premium": 15536.04,
-    "policies": 3,
-    "roi": 0,
-    "avgPolicy": 5178.68,
+    "consume": 4962.3,
+    "premium": 16099.8,
+    "policies": 4,
+    "roi": 3.244,
+    "avgPolicy": 4024.95,
     "duration": 60,
-    "timeCost": 0
+    "timeCost": 4962.3
   },
   {
     "date": "2026.8.27",
     "roomName": "平安健康-全家保",
     "streamer": "孙克岚",
     "timeSlot": "18:00-19:00",
-    "consume": 0,
-    "premium": 0,
-    "policies": 0,
-    "roi": 0,
-    "avgPolicy": 0,
+    "consume": 5235.33,
+    "premium": 7469.24,
+    "policies": 5,
+    "roi": 1.427,
+    "avgPolicy": 1493.85,
     "duration": 60,
-    "timeCost": 0
+    "timeCost": 5235.33
   },
   {
     "date": "2026.8.27",
@@ -13064,13 +13064,13 @@ export const SESSION_RECORDS: SessionRecord[] = [
     "roomName": "泰康-泰全能",
     "streamer": "何雅源",
     "timeSlot": "18:00-19:00",
-    "consume": 0,
-    "premium": 0,
-    "policies": 0,
-    "roi": 0,
-    "avgPolicy": 0,
+    "consume": 2990.71,
+    "premium": 7069.68,
+    "policies": 7,
+    "roi": 2.364,
+    "avgPolicy": 1009.95,
     "duration": 60,
-    "timeCost": 0
+    "timeCost": 2990.71
   },
   {
     "date": "2026.8.27",
@@ -18706,26 +18706,26 @@ export const SESSION_RECORDS: SessionRecord[] = [
     "roomName": "泰康-普惠增强版",
     "streamer": "张欣颖",
     "timeSlot": "17:00-18:00",
-    "consume": 0,
-    "premium": 0,
-    "policies": 0,
-    "roi": 0,
-    "avgPolicy": 0,
+    "consume": 4919.14,
+    "premium": 14522.52,
+    "policies": 21,
+    "roi": 2.952,
+    "avgPolicy": 691.55,
     "duration": 60,
-    "timeCost": 0
+    "timeCost": 4919.14
   },
   {
     "date": "2026.8.27",
     "roomName": "泰康-普惠增强版",
     "streamer": "张欣颖",
     "timeSlot": "18:00-19:00",
-    "consume": 0,
-    "premium": 0,
-    "policies": 0,
-    "roi": 0,
-    "avgPolicy": 0,
+    "consume": 3900.03,
+    "premium": 13453.48,
+    "policies": 23,
+    "roi": 3.45,
+    "avgPolicy": 584.93,
     "duration": 60,
-    "timeCost": 0
+    "timeCost": 3900.03
   },
   {
     "date": "2026.8.27",
@@ -18986,6 +18986,71 @@ export const SESSION_RECORDS: SessionRecord[] = [
     "avgPolicy": 0,
     "duration": 60,
     "timeCost": 242.34
+  },
+  {
+    "date": "2026.8.27",
+    "roomName": "平安健康-E生安心",
+    "streamer": "王文怡",
+    "timeSlot": "19:00-20:00",
+    "consume": 0,
+    "premium": 0,
+    "policies": 0,
+    "roi": 0,
+    "avgPolicy": 0,
+    "duration": 60,
+    "timeCost": 0
+  },
+  {
+    "date": "2026.8.27",
+    "roomName": "平安健康-E生安心",
+    "streamer": "王文怡",
+    "timeSlot": "20:00-21:00",
+    "consume": 0,
+    "premium": 0,
+    "policies": 0,
+    "roi": 0,
+    "avgPolicy": 0,
+    "duration": 60,
+    "timeCost": 0
+  },
+  {
+    "date": "2026.8.27",
+    "roomName": "平安健康-E生安心",
+    "streamer": "王文怡",
+    "timeSlot": "21:00-22:00",
+    "consume": 0,
+    "premium": 0,
+    "policies": 0,
+    "roi": 0,
+    "avgPolicy": 0,
+    "duration": 60,
+    "timeCost": 0
+  },
+  {
+    "date": "2026.8.27",
+    "roomName": "平安健康-E生安心",
+    "streamer": "王文怡",
+    "timeSlot": "22:00-23:00",
+    "consume": 0,
+    "premium": 0,
+    "policies": 0,
+    "roi": 0,
+    "avgPolicy": 0,
+    "duration": 60,
+    "timeCost": 0
+  },
+  {
+    "date": "2026.8.27",
+    "roomName": "平安健康-E生安心",
+    "streamer": "王文怡",
+    "timeSlot": "23:00-24:00",
+    "consume": 0,
+    "premium": 0,
+    "policies": 0,
+    "roi": 0,
+    "avgPolicy": 0,
+    "duration": 60,
+    "timeCost": 0
   },
   {
     "date": "2026.8.1",

@@ -9,10 +9,10 @@ import RoomBubbleChart from "@/components/RoomBubbleChart";
 import AlertBanner from "@/components/AlertBanner";
 
 const METRIC_OPTIONS = [
-  { key: "consume", label: "消耗" },
-  { key: "premium", label: "保费" },
-  { key: "roi", label: "ROI" },
-  { key: "timeCost", label: "时耗" },
+  { key: "totalConsume", label: "消耗" },
+  { key: "totalPremium", label: "保费" },
+  { key: "avgRoi", label: "ROI" },
+  { key: "avgTimeCost", label: "时耗" },
 ] as const;
 
 function ChangeBadge({ rate, direction, inverse }: { rate: number; direction: 'up' | 'down' | 'flat'; inverse?: boolean }) {
