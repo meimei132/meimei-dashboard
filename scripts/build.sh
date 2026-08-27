@@ -9,4 +9,3 @@ node scripts/fetch-from-doc.js
 
 echo "Building static site..."
 npx next build
-npx next export
