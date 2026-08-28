@@ -42,6 +42,14 @@ jobs:
           directory: out
           branch: main
       
+      - name: 清除 Cloudflare 缓存
+        run: |
+          echo "清除 Cloudflare Pages 缓存..."
+          curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CLOUDFLARE_ZONE_ID }}/purge_cache" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --data '{"purge_everything":true}' || echo "缓存清除失败（非致命错误）"
+      
       - name: 发送飞书日报
         if: success()
         run: node scripts/send-feishu-report.js
