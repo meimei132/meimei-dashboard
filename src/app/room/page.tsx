@@ -96,10 +96,9 @@ export default function RoomPage() {
   // 数据中最新的日期（用于显示更新时间）
   const latestDate = useMemo(() => getLatestDate(records), [records]);
 
-  // 过滤到昨天为止的数据
+  // 直接使用所有数据（不过滤）
   const filteredRecords = useMemo(() => {
-    const recs = filterUpToYesterday(records);
-    let filtered = recs.filter(r => isDateInMonth(r.date, currentMonth));
+    let filtered = records.filter(r => isDateInMonth(r.date, currentMonth));
     if (selectedRoom !== "all") filtered = filtered.filter(r => r.room === selectedRoom);
     return filtered;
   }, [selectedRoom, currentMonth]);
@@ -134,11 +133,10 @@ export default function RoomPage() {
     }
   }, [filteredRecords, streamerSortBy]);
 
-  // Yesterday's records
+  // Yesterday's records (使用最新日期的数据)
   const yesterdayRecords = useMemo(() => {
-    let recs = filterUpToYesterday(records);
-    const yd = getYesterdayDate(records);
-    recs = recs.filter(r => r.date === yd);
+    const yd = getLatestDate(records);
+    let recs = records.filter(r => r.date === yd);
     if (selectedRoom !== "all") recs = recs.filter(r => r.room === selectedRoom);
     return recs;
   }, [selectedRoom]);

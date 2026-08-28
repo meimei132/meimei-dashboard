@@ -15,8 +15,8 @@ export default function StreamerPage() {
 
   const latestDate = useMemo(() => getLatestDate(records), [records]);
 
-  // 过滤到昨天的数据
-  const filteredRecords = useMemo(() => filterUpToYesterday(records), []);
+  // 直接使用所有数据（不过滤）
+  const filteredRecords = records;
 
   // 设置默认日期范围（最近30天）
   const defaultDateRange = useMemo(() => {
