@@ -5,19 +5,48 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# 暂时禁用，使用 Vercel 部署
-# permissions:
-#   contents: read
-#   pages: write
-#   id-token: write
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
-# concurrency:
-#   group: "pages"
-#   cancel-in-progress: false
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    
     steps:
-      - name: 跳过部署
-        run: echo "使用 Vercel 部署，跳过 GitHub Pages"
+      - name: 检出代码
+        uses: actions/checkout@v4
+      
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      
+      - name: 安装 pnpm
+        run: npm install -g pnpm
+      
+      - name: 安装依赖
+        run: pnpm install --no-frozen-lockfile
+      
+      - name: 构建静态页面
+        run: npx next build
+      
+      - name: 设置 Pages
+        uses: actions/configure-pages@v4
+      
+      - name: 上传 artifacts
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './out'
+      
+      - name: 部署到 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
