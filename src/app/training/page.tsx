@@ -2,19 +2,22 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { SESSION_RECORDS, ROOM_SUMMARIES, STREAMER_SUMMARIES } from '@/lib/mock-data';
+import { SESSION_RECORDS } from '@/lib/mock-data';
 import {
   getLatestDate,
   getYesterdayDate,
   formatCurrency,
   formatNumber,
   formatDuration,
-  aggregateByRoom,
-  aggregateByStreamer,
+  aggregateRooms,
+  aggregateStreamers,
   detectAlerts,
 } from '@/lib/data-utils';
-import type { SessionRecord, RoomSummary, StreamerSummary, AlertItem } from '@/lib/types';
-import { TrendChart } from '@/components/TrendChart';
+import type { RoomSummary, StreamerSummary, AlertItem } from '@/lib/types';
+import TrendChart from '@/components/TrendChart';
+
+// 类型兼容处理
+const records = SESSION_RECORDS as any[];
 
 export default function TrainingDashboard() {
   const [latestDate, setLatestDate] = useState('');
@@ -25,27 +28,27 @@ export default function TrainingDashboard() {
   const [selectedRoom, setSelectedRoom] = useState('all');
 
   useEffect(() => {
-    const latest = getLatestDate(SESSION_RECORDS);
+    const latest = getLatestDate(records);
     setLatestDate(latest);
-    setYesterday(getYesterdayDate(latest));
+    setYesterday(getYesterdayDate(records));
 
     // 检测预警
-    const detected = detectAlerts(SESSION_RECORDS);
+    const detected = detectAlerts(records);
     setAlerts(detected);
 
     // 聚合数据
-    setRoomAgg(aggregateByRoom(SESSION_RECORDS));
-    setStreamerAgg(aggregateByStreamer(SESSION_RECORDS));
+    setRoomAgg(aggregateRooms(records));
+    setStreamerAgg(aggregateStreamers(records));
   }, []);
 
   // 筛选数据
   const filteredRecords = selectedRoom === 'all'
-    ? SESSION_RECORDS
-    : SESSION_RECORDS.filter(r => r.roomName === selectedRoom);
+    ? records
+    : records.filter(r => r.roomName === selectedRoom);
 
   const filteredStreamers = selectedRoom === 'all'
     ? streamerAgg
-    : streamerAgg.filter(s => s.roomName === selectedRoom);
+    : streamerAgg.filter(s => s.room === selectedRoom);
 
   // 计算汇总指标
   const totalConsume = filteredRecords.reduce((sum, r) => sum + r.consume, 0);
@@ -67,7 +70,7 @@ export default function TrainingDashboard() {
 
   // 直播间数据
   const roomData = roomAgg.map(r => ({
-    name: r.roomName,
+    name: r.room,
     consume: r.totalConsume,
     premium: r.totalPremium,
     roi: r.totalConsume > 0 ? r.totalPremium / r.totalConsume : 0,
@@ -102,7 +105,7 @@ export default function TrainingDashboard() {
         >
           <option value="all">全部直播间</option>
           {roomAgg.map(r => (
-            <option key={r.roomName} value={r.roomName}>{r.roomName}</option>
+            <option key={r.room} value={r.room}>{r.room}</option>
           ))}
         </select>
       </div>
@@ -124,12 +127,12 @@ export default function TrainingDashboard() {
           <div className="grid grid-cols-2 gap-3">
             {alerts.map((alert, i) => (
               <div key={i} className="flex items-start gap-2 text-sm">
-                <span className={alert.type === 'bad' ? 'text-[#ef4444]' : 'text-[#10b981]'}>
-                  {alert.type === 'bad' ? '🔴' : '🟢'}
+                <span className={alert.direction === 'down' ? 'text-[#ef4444]' : 'text-[#10b981]'}>
+                  {alert.direction === 'down' ? '🔴' : '🟢'}
                 </span>
                 <div>
                   <span className="text-[#e2e8f0]">{alert.name}</span>
-                  <span className="text-[#94a3b8] ml-2">{alert.message}</span>
+                  <span className="text-[#94a3b8] ml-2">{alert.metricLabel} {alert.direction === 'down' ? '下降' : '上升'} {alert.days} 天</span>
                 </div>
               </div>
             ))}
@@ -167,8 +170,8 @@ export default function TrainingDashboard() {
               <div key={i} className="flex items-center gap-3 p-2 bg-[#0a0a0f50] rounded">
                 <span className="text-[#94a3b8] w-6 text-right">{i + 1}</span>
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate">{s.streamerName}</div>
-                  <div className="text-xs text-[#94a3b8]">{s.roomName}</div>
+                  <div className="font-medium truncate">{s.streamer}</div>
+                  <div className="text-xs text-[#94a3b8]">{s.room}</div>
                 </div>
                 <div className="text-[#00d4ff] font-mono text-sm">
                   {formatDuration(s.totalDuration)}
@@ -186,8 +189,8 @@ export default function TrainingDashboard() {
           {topStreamersByPremium.map((s, i) => (
             <div key={i} className="p-3 bg-[#0a0a0f50] rounded border border-[#00d4ff10]">
               <div className="text-xs text-[#94a3b8] mb-1">#{i + 1}</div>
-              <div className="font-medium truncate">{s.streamerName}</div>
-              <div className="text-xs text-[#94a3b8] mb-2">{s.roomName}</div>
+              <div className="font-medium truncate">{s.streamer}</div>
+              <div className="text-xs text-[#94a3b8] mb-2">{s.room}</div>
               <div className="text-[#10b981] font-bold">{formatCurrency(s.totalPremium)}</div>
               <div className="text-xs text-[#94a3b8] mt-1">
                 ROI: {s.totalConsume > 0 ? (s.totalPremium / s.totalConsume).toFixed(2) : '0.00'}
@@ -201,8 +204,9 @@ export default function TrainingDashboard() {
       <div className="bg-[#14142380] border border-[#00d4ff20] rounded-lg p-4">
         <h3 className="text-lg font-bold text-[#00d4ff] mb-4">数据趋势</h3>
         <TrendChart
-          records={filteredRecords}
-          height={300}
+          data={filteredRecords.map(r => ({ date: r.date, value: r.premium }))}
+          title="保费趋势"
+          color="#10b981"
         />
       </div>
     </div>

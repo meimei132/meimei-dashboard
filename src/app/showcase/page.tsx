@@ -2,16 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { SESSION_RECORDS, ROOM_SUMMARIES, STREAMER_SUMMARIES } from '@/lib/mock-data';
+import { SESSION_RECORDS } from '@/lib/mock-data';
 import {
   getLatestDate,
   formatCurrency,
   formatNumber,
   formatDuration,
-  aggregateByRoom,
-  aggregateByStreamer,
+  aggregateRooms,
+  aggregateStreamers,
 } from '@/lib/data-utils';
-import type { SessionRecord, RoomSummary, StreamerSummary } from '@/lib/types';
+import type { RoomSummary, StreamerSummary } from '@/lib/types';
+
+// 类型兼容处理
+const records = SESSION_RECORDS as any[];
 
 export default function ShowcaseDashboard() {
   const [latestDate, setLatestDate] = useState('');
@@ -19,16 +22,16 @@ export default function ShowcaseDashboard() {
   const [streamerAgg, setStreamerAgg] = useState<StreamerSummary[]>([]);
 
   useEffect(() => {
-    setLatestDate(getLatestDate(SESSION_RECORDS));
-    setRoomAgg(aggregateByRoom(SESSION_RECORDS));
-    setStreamerAgg(aggregateByStreamer(SESSION_RECORDS));
+    setLatestDate(getLatestDate(records));
+    setRoomAgg(aggregateRooms(records));
+    setStreamerAgg(aggregateStreamers(records));
   }, []);
 
   // 汇总数据
-  const totalConsume = SESSION_RECORDS.reduce((sum, r) => sum + r.consume, 0);
-  const totalPremium = SESSION_RECORDS.reduce((sum, r) => sum + r.premium, 0);
-  const totalPolicies = SESSION_RECORDS.reduce((sum, r) => sum + r.policies, 0);
-  const totalDuration = SESSION_RECORDS.reduce((sum, r) => sum + r.duration, 0);
+  const totalConsume = records.reduce((sum, r) => sum + r.consume, 0);
+  const totalPremium = records.reduce((sum, r) => sum + r.premium, 0);
+  const totalPolicies = records.reduce((sum, r) => sum + r.policies, 0);
+  const totalDuration = records.reduce((sum, r) => sum + r.duration, 0);
   const avgROI = totalConsume > 0 ? totalPremium / totalConsume : 0;
 
   // 直播间数量
@@ -39,7 +42,7 @@ export default function ShowcaseDashboard() {
 
   // 直播时间段分布
   const hourDistribution = Array(24).fill(0);
-  SESSION_RECORDS.forEach(r => {
+  records.forEach(r => {
     const hour = parseInt(r.timeSlot.split(':')[0]);
     hourDistribution[hour] += r.duration;
   });
@@ -52,7 +55,7 @@ export default function ShowcaseDashboard() {
 
   // 直播间数据
   const roomData = roomAgg.map(r => ({
-    name: r.roomName,
+    name: r.room,
     consume: r.totalConsume,
     premium: r.totalPremium,
     roi: r.totalConsume > 0 ? r.totalPremium / r.totalConsume : 0,
@@ -182,9 +185,9 @@ export default function ShowcaseDashboard() {
             .slice(0, 12)
             .map((s, i) => (
               <div key={i} className="text-center p-4 bg-[#0a0a0f50] rounded border border-[#00d4ff10]">
-                <div className="text-3xl mb-2">👤</div>
-                <div className="font-medium text-sm truncate">{s.streamerName}</div>
-                <div className="text-xs text-[#94a3b8] mt-1">{s.roomName}</div>
+                <div className="text-3xl mb-2"></div>
+                <div className="font-medium text-sm truncate">{s.streamer}</div>
+                <div className="text-xs text-[#94a3b8] mt-1">{s.room}</div>
                 <div className="text-[#10b981] font-bold text-sm mt-2">
                   {formatCurrency(s.totalPremium)}
                 </div>
