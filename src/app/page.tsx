@@ -550,6 +550,12 @@ export default function OverviewPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-100">直播数据总览</h1>
         <div className="flex items-center gap-3">
+          <a href="/training" className="rounded px-3 py-1.5 text-xs font-medium bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 transition-colors">
+            培训大屏
+          </a>
+          <a href="/showcase" className="rounded px-3 py-1.5 text-xs font-medium bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition-colors">
+            展示大屏
+          </a>
           <div className="flex rounded-md bg-gray-800 p-0.5">
             <button
               onClick={() => setViewMode('all')}
