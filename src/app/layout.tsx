@@ -5,6 +5,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "美魅数据大屏",
   description: "美魅直播运营数据可视化大屏",
+  other: {
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
