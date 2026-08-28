@@ -10,13 +10,20 @@ const path = require('path');
 // 飞书群机器人 Webhook
 const WEBHOOK_URL = process.env.FEISHU_WEBHOOK_URL || '';
 
+if (!WEBHOOK_URL) {
+  console.log('=== 飞书日报推送 ===');
+  console.log('Webhook: 未配置');
+  console.log('跳过飞书日报推送（请在 GitHub Secrets 中配置 FEISHU_WEBHOOK_URL）');
+  process.exit(0);
+}
+
 // 读取数据
 const mockDataPath = path.join(__dirname, '../src/lib/mock-data.ts');
 const mockDataContent = fs.readFileSync(mockDataPath, 'utf-8');
 
 // 从 mock-data.ts 中提取数据
 function extractData() {
-  const match = mockDataContent.match(/export const mockData:\s*SessionRecord\[\]\s*=\s*(\[.*?\]);/s);
+  const match = mockDataContent.match(/export const SESSION_RECORDS:\s*SessionRecord\[\]\s*=\s*(\[.*?\]);/s);
   if (!match) return [];
   
   try {
