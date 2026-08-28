@@ -432,11 +432,34 @@ async function main() {
     }
   }
 
-  console.log(`\n=== 总计: ${allRecords.length} 条记录 ===`);
+  // 过滤掉今天及以后的数据，只保留到昨天
+  const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = `${yesterday.getFullYear()}.${yesterday.getMonth() + 1}.${yesterday.getDate()}`;
+  
+  console.log(`\n当前日期: ${now.getFullYear()}.${now.getMonth() + 1}.${now.getDate()}`);
+  console.log(`昨天日期: ${yesterdayStr}`);
+  console.log(`过滤前记录数: ${allRecords.length}`);
+  
+  const filteredRecords = allRecords.filter(r => {
+    // 解析日期字符串 "2026.8.27"
+    const parts = r.date.split('.');
+    const recordDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    return recordDate <= yesterday;
+  });
+  
+  console.log(`过滤后记录数: ${filteredRecords.length}`);
 
-  const rooms = [...new Set(allRecords.map(r => r.roomName))];
-  const streamers = [...new Set(allRecords.map(r => r.streamer))];
-  const dates = [...new Set(allRecords.map(r => r.date))].sort();
+  console.log(`\n=== 总计: ${filteredRecords.length} 条记录 ===`);
+
+  const rooms = [...new Set(filteredRecords.map(r => r.roomName))];
+  const streamers = [...new Set(filteredRecords.map(r => r.streamer))];
+  const dates = [...new Set(filteredRecords.map(r => r.date))].sort((a, b) => {
+    const pa = a.split('.').map(Number);
+    const pb = b.split('.').map(Number);
+    return new Date(pa[0], pa[1]-1, pa[2]) - new Date(pb[0], pb[1]-1, pb[2]);
+  });
 
   console.log(`\n统计信息:`);
   console.log(`  直播间数量: ${rooms.length}`);
@@ -444,7 +467,7 @@ async function main() {
   console.log(`  日期范围: ${dates[0]} ~ ${dates[dates.length - 1]}`);
   console.log(`  每个直播间的记录数:`);
   rooms.forEach(room => {
-    const count = allRecords.filter(r => r.roomName === room).length;
+    const count = filteredRecords.filter(r => r.roomName === room).length;
     console.log(`    ${room}: ${count} 条`);
   });
 
@@ -452,6 +475,7 @@ async function main() {
   const content = `// 自动从飞书文档抓取
 // 抓取时间: ${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}
 // 文档 Token: ${DOC_TOKEN}
+// 数据范围：截止到昨天（${yesterdayStr}）
 // 固定列索引：日期=0, 时间段=1, 主播=2, 视频消耗=4, 直投消耗=5, 保单量=6, 保费=7
 // 总消耗 = 视频消耗 + 直投消耗（计算得出）
 // ROI = 保费 / 总消耗（计算得出）
@@ -470,7 +494,7 @@ export interface SessionRecord {
   timeCost: number;
 }
 
-export const SESSION_RECORDS: SessionRecord[] = ${JSON.stringify(allRecords, null, 2)};
+export const SESSION_RECORDS: SessionRecord[] = ${JSON.stringify(filteredRecords, null, 2)};
 
 export const LIVE_ROOMS = ${JSON.stringify(rooms, null, 2)};
 
