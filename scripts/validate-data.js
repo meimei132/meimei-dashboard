@@ -12,7 +12,7 @@ const mockDataContent = fs.readFileSync(mockDataPath, 'utf-8');
 
 // 提取数据
 function extractData() {
-  const match = mockDataContent.match(/export const mockData:\s*SessionRecord\[\]\s*=\s*(\[.*?\]);/s);
+  const match = mockDataContent.match(/export const SESSION_RECORDS:\s*SessionRecord\[\]\s*=\s*(\[.*?\]);/s);
   if (!match) return [];
   
   try {
@@ -59,7 +59,7 @@ function checkDateContinuity(data) {
 
 // 3. 直播间检查
 function checkRooms(data) {
-  const rooms = [...new Set(data.map(r => r.room).filter(Boolean))];
+  const rooms = [...new Set(data.map(r => r.roomName || r.room).filter(Boolean))];
   check('直播间数量', rooms.length > 0, '无直播间数据');
   check('直播间数量合理', rooms.length >= 2, `只有${rooms.length}个直播间`);
 }
@@ -79,7 +79,7 @@ function checkValues(data) {
   const invalidPremium = data.filter(r => r.premium < 0 || r.premium > 100000000);
   check('保费值合理', invalidPremium.length === 0, `${invalidPremium.length}条记录保费异常`);
   
-  const invalidDuration = data.filter(r => r.duration < 0 || r.duration > 24);
+  const invalidDuration = data.filter(r => r.duration < 0 || r.duration > 1440); // 最多24小时=1440分钟
   check('时长合理', invalidDuration.length === 0, `${invalidDuration.length}条记录时长异常`);
 }
 
@@ -96,7 +96,7 @@ function checkROI(data) {
 // 7. 数据完整性检查
 function checkCompleteness(data) {
   const incomplete = data.filter(r => {
-    return !r.date || !r.room || !r.streamer || 
+    return !r.date || !(r.roomName || r.room) || !r.streamer || 
            r.consume === undefined || r.premium === undefined || 
            r.policies === undefined || r.duration === undefined;
   });
