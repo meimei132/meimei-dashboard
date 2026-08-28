@@ -101,12 +101,16 @@ async function getSheets(token, spreadsheetToken) {
 }
 
 async function getSheetData(token, spreadsheetToken, sheetId) {
+  // 飞书 API 的 range 参数实际不起作用，每次返回固定的 875 行
+  // 但这 875 行已包含所有日期的数据（从 8.1 到 8.28）
   const resp = await fetch(`https://open.feishu.cn/open-apis/sheets/v2/spreadsheets/${spreadsheetToken}/values/${sheetId}`, {
     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
   });
   const data = await resp.json();
   if (data.code !== 0) throw new Error(`获取表格数据失败: ${JSON.stringify(data)}`);
-  return data.data.valueRange.values;
+  const rows = data.data.valueRange.values;
+  console.log(`  获取到 ${rows.length} 行数据`);
+  return rows;
 }
 
 function excelSerialToDate(serial) {
@@ -151,10 +155,50 @@ function parseNumber(val) {
   if (val === null || val === undefined || val === '') return 0;
   if (typeof val === 'number') return val;
   if (typeof val === 'string') {
-    if (/[a-zA-Z+\-*/]/.test(val)) return 0; // 公式字符串返回0
+    // 检查是否是公式字符串（如 "E806+F806" 或 "=SUM(...)"）
+    if (val.match(/[A-Z]\d+\+[A-Z]\d+/) || val.startsWith('=')) {
+      return 0; // 公式字符串，稍后处理
+    }
+    if (/[a-zA-Z+\-*/]/.test(val)) return 0; // 其他公式字符串返回0
     const num = parseFloat(val);
     return isNaN(num) ? 0 : num;
   }
+  return 0;
+}
+
+// 计算公式的值
+function evaluateFormula(formula, rows) {
+  if (!formula || typeof formula !== 'string') return 0;
+  
+  // 移除开头的 =
+  if (formula.startsWith('=')) {
+    formula = formula.substring(1);
+  }
+  
+  // 处理 SUM 函数，如 "SUM(E806:E807)"
+  const sumMatch = formula.match(/SUM\(([A-Z])(\d+):([A-Z])(\d+)\)/i);
+  if (sumMatch) {
+    const [, startCol, startRow, , endRow] = sumMatch;
+    const colIdx = startCol.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
+    let sum = 0;
+    for (let r = parseInt(startRow) - 1; r < parseInt(endRow); r++) {
+      const val = parseNumber(rows[r]?.[colIdx]);
+      sum += val;
+    }
+    return sum;
+  }
+  
+  // 处理加法公式，如 "E806+F806"
+  const addMatch = formula.match(/([A-Z])(\d+)\+([A-Z])(\d+)/i);
+  if (addMatch) {
+    const [, col1, row1, col2, row2] = addMatch;
+    const col1Idx = col1.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
+    const col2Idx = col2.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
+    const val1 = parseNumber(rows[parseInt(row1) - 1]?.[col1Idx]);
+    const val2 = parseNumber(rows[parseInt(row2) - 1]?.[col2Idx]);
+    return val1 + val2;
+  }
+  
   return 0;
 }
 
@@ -268,20 +312,41 @@ function parseData(rows, config) {
         totalCost = videoCost + directCost;
       }
     } else {
-      // 泰康-普惠增强版：优先读取总消耗列，如果是公式(0)则从直投+素材计算
-      const directTotalCost = parseNumber(row[config.colTotalCost]);
-      if (directTotalCost > 0) {
-        totalCost = directTotalCost;
+      // 泰康-普惠增强版：优先读取总消耗列，如果是公式则计算
+      const totalCostVal = row[config.colTotalCost];
+      if (typeof totalCostVal === 'string' && (totalCostVal.match(/[A-Z]\d+\+[A-Z]\d+/) || totalCostVal.startsWith('='))) {
+        // 总消耗列是公式，计算公式
+        totalCost = evaluateFormula(totalCostVal, rows);
       } else {
-        // 总消耗列是公式，从直投+素材计算
-        const directCost = parseNumber(row[config.colDirectCost]);
-        const materialCost = parseNumber(row[config.colMaterialCost]);
-        totalCost = directCost + materialCost;
+        const directTotalCost = parseNumber(totalCostVal);
+        if (directTotalCost > 0) {
+          totalCost = directTotalCost;
+        } else {
+          // 总消耗列是公式(0)，从直投+素材计算
+          const directCost = parseNumber(row[config.colDirectCost]);
+          const materialCost = parseNumber(row[config.colMaterialCost]);
+          totalCost = directCost + materialCost;
+        }
       }
     }
     
-    const policies = parseInteger(row[config.colPolicies]);
-    const premium = parseNumber(row[config.colPremium]);
+    // 保单数（支持公式）
+    const policiesVal = row[config.colPolicies];
+    let policies;
+    if (typeof policiesVal === 'string' && (policiesVal.match(/SUM\([A-Z]\d+:[A-Z]\d+\)/i) || policiesVal.startsWith('='))) {
+      policies = Math.round(evaluateFormula(policiesVal, rows));
+    } else {
+      policies = parseInteger(policiesVal);
+    }
+    
+    // 年化保费（支持公式）
+    const premiumVal = row[config.colPremium];
+    let premium;
+    if (typeof premiumVal === 'string' && (premiumVal.match(/[A-Z]\d+\+[A-Z]\d+/) || premiumVal.startsWith('='))) {
+      premium = evaluateFormula(premiumVal, rows);
+    } else {
+      premium = parseNumber(premiumVal);
+    }
     
     // 计算 ROI = 年化保费 / 总消耗
     const roi = totalCost > 0 ? parseFloat((premium / totalCost).toFixed(3)) : 0;
